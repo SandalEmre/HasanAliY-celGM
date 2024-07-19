@@ -1,0 +1,47 @@
+.navbar {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    transition: background-color 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #343a40; /* Arka plan rengi */
+}
+
+.navbar-brand img {
+    margin-right: 10px;
+}
+
+.navbar-nav .nav-link {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff; /* Yazı rengi */
+    transition: color 0.3s;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #007bff; /* Hover durumunda renk değişikliği */
+}
+
+.navbar-dark .navbar-nav .nav-link.dropdown-toggle::after {
+    display: none;
+}
+
+.navbar-toggler {
+    border: none;
+}
+
+.navbar-toggler-icon {
+    background-color: #fff;
+}
+
+
+.navbar-text {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff; /* Yazı rengi */
+    margin-left: 10px;
+    transition: color 0.3s; /* Renk geçiş efekti */
+}
+
+.navbar-text:hover {
+    color: #007bff; /* Hover durumunda renk değişikliği */
+}

@@ -1,0 +1,21 @@
+.cd-headline.clip .cd-words-wrapper {
+    display: inline-block;
+    position: relative;
+    width: 266px;
+    height: 80px;
+    overflow: hidden;
+}
+
+.cd-headline.clip .cd-words-wrapper b {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.cd-headline.clip .cd-words-wrapper b:first-child {
+    position: relative;
+    opacity: 1;
+}
