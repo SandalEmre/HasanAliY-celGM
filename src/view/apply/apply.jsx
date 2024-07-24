@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from "../../firebase/Firebase";
 
 function Apply() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { job } = location.state || { job: {} };
 
     const [formData, setFormData] = useState({
@@ -10,7 +14,7 @@ function Apply() {
         lastName: '',
         email: '',
         gender: '',
-        resume: '',
+        birthDate: '', // Yeni eklenen alan
         resumeFile: null
     });
 
@@ -19,7 +23,6 @@ function Apply() {
         if (name === 'resume' && files) {
             setFormData((prevData) => ({
                 ...prevData,
-                resume: URL.createObjectURL(files[0]),
                 resumeFile: files[0]
             }));
         } else {
@@ -30,11 +33,40 @@ function Apply() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Form verilerini işleme kodu burada yer alacak
-        console.log('Başvuru verileri:', formData);
-        alert('Başvurunuz alındı!');
+
+        try {
+            if (job && job.id && formData.resumeFile) {
+                const jobId = String(job.id);
+                const applicationsRef = collection(db, 'jobListings', jobId, 'applications');
+
+                // Upload resume file to Firebase Storage
+                const resumeRef = ref(storage, `resumes/${jobId}/${formData.resumeFile.name}`);
+                await uploadBytes(resumeRef, formData.resumeFile);
+
+                // Get the download URL of the uploaded resume
+                const resumeURL = await getDownloadURL(resumeRef);
+
+                // Add the application data to Firestore
+                await addDoc(applicationsRef, {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    gender: formData.gender,
+                    birthDate: formData.birthDate, // Doğum tarihini ekleme
+                    resume: resumeURL // Save the resume URL
+                });
+
+                alert('Başvurunuz alındı!');
+                navigate('/'); // Redirect to the homepage
+            } else {
+                alert('Başvuru için bir iş ilanı seçmediniz veya özgeçmiş dosyasını seçmediniz.');
+            }
+        } catch (error) {
+            console.error("Error adding document: ", error);
+            alert('Başvuru sırasında bir hata oluştu.');
+        }
     };
 
     return (
@@ -49,30 +81,46 @@ function Apply() {
                         <p>{job.description}</p>
                         <form onSubmit={handleSubmit} className="mt-4">
                             <div className="mb-4">
-                                <label className="block text-left mb-2 font-semibold" htmlFor="name">Adınız:</label>
-                                <input className="w-full p-2 border rounded" type="text" id="name" name="name"/>
+                                <label className="block text-left mb-2 font-semibold" htmlFor="firstName">Adınız:</label>
+                                <input
+                                    className="w-full p-2 border rounded"
+                                    type="text"
+                                    id="firstName"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
 
                             <div className="mb-4">
-                                <label className="block text-left mb-2 font-semibold" htmlFor="surname">Soyadınız:</label>
-                                <input className="w-full p-2 border rounded" type="text" id="surname" name="surname"/>
+                                <label className="block text-left mb-2 font-semibold" htmlFor="lastName">Soyadınız:</label>
+                                <input
+                                    className="w-full p-2 border rounded"
+                                    type="text"
+                                    id="lastName"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
 
                             <div className="mb-4">
-
-                                <label className="block text-left mb-2 font-semibold" htmlFor="age">Yaşınız:</label>
-                                <input className="w-full p-2 border rounded" type="number" id="age" name="age"/><br/>
-
+                                <label className="block text-left mb-2 font-semibold" htmlFor="email">E-posta Adresiniz:</label>
+                                <input
+                                    className="w-full p-2 border rounded"
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-left mb-2 font-semibold" htmlFor="email">E-posta
-                                    Adresiniz:</label>
-                                <input className="w-full p-2 border rounded" type="email" id="email" name="email"/><br/>
 
-                            </div>
                             <div className="mb-4">
-                                <label className="block text-left mb-2 font-semibold"
-                                       htmlFor="gender">Cinsiyet:</label>
+                                <label className="block text-left mb-2 font-semibold" htmlFor="gender">Cinsiyet:</label>
                                 <select
                                     id="gender"
                                     name="gender"
@@ -87,9 +135,22 @@ function Apply() {
                                     <option value="diğer">Diğer</option>
                                 </select>
                             </div>
+
                             <div className="mb-4">
-                                <label className="block text-left mb-2 font-semibold"
-                                       htmlFor="resume">Özgeçmiş:</label>
+                                <label className="block text-left mb-2 font-semibold" htmlFor="birthDate">Doğum Tarihi:</label>
+                                <input
+                                    type="date"
+                                    id="birthDate"
+                                    name="birthDate"
+                                    value={formData.birthDate}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border rounded"
+                                    required
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-left mb-2 font-semibold" htmlFor="resume">Özgeçmiş:</label>
                                 <input
                                     type="file"
                                     id="resume"
@@ -98,14 +159,8 @@ function Apply() {
                                     className="w-full p-2 border rounded"
                                     required
                                 />
-                                {formData.resume && (
-                                    <div className="mt-2">
-                                        <a href={formData.resume} target="_blank" rel="noopener noreferrer">
-                                            Özgeçmişi Görüntüle
-                                        </a>
-                                    </div>
-                                )}
                             </div>
+
                             <button
                                 type="submit"
                                 className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"

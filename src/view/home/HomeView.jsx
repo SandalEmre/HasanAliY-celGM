@@ -73,7 +73,7 @@ function HomeView() {
                         position: 'relative' // Ensure relative positioning for absolute child
                     }}
                 >
-                    <AnnouncementSlider announcements={announcements}/>
+                    {/*<AnnouncementSlider announcements={announcements}/>*/}
                     <div className="logo-container relative">
 
 

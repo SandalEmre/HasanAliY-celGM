@@ -1,57 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const jobListings = [
-    {
-        id: 1,
-        title: "Yazılım Geliştirici",
-        company: "TechCorp",
-        location: "İstanbul",
-        description: "Yazılım geliştirme projelerinde görev alacak tecrübeli geliştirici arıyoruz."
-    },
-    {
-        id: 2,
-        title: "Proje Yöneticisi",
-        company: "BizSolution",
-        location: "Ankara",
-        description: "Proje yönetiminde deneyimli, liderlik vasıflarına sahip çalışma arkadaşı arıyoruz."
-    },
-    {
-        id: 3,
-        title: "Dijital Pazarlama Uzmanı",
-        company: "Marketify",
-        location: "İzmir",
-        description: "Dijital pazarlama alanında bilgili ve deneyimli uzman arıyoruz."
-    },
-    {
-        id: 4,
-        title: "Dijital Pazarlama Uzmanı",
-        company: "Marketify",
-        location: "İzmir",
-        description: "Dijital pazarlama alanında bilgili ve deneyimli uzman arıyoruz."
-    },
-    {
-        id: 5,
-        title: "Dijital Pazarlama Uzmanı",
-        company: "Marketify",
-        location: "İzmir",
-        description: "Dijital pazarlama alanında bilgili ve deneyimli uzman arıyoruz."
-    },
-    {
-        id: 6,
-        title: "Dijital Pazarlama Uzmanı",
-        company: "Marketify",
-        location: "İzmir",
-        description: "Dijital pazarlama alanında bilgili ve deneyimli uzman arıyoruz."
-    }
-];
+import { collection, getDocs } from 'firebase/firestore';
+import {db} from "../../firebase/Firebase";
 
 function JobApplication() {
     const backgroundImageUrl = 'https://hasanaliyucel.atakum.bel.tr/img/slider/background.png';
+    const [jobListings, setJobListings] = useState([]);
     const [selectedJob, setSelectedJob] = useState(null);
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const fetchJobListings = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'jobListings'));
+                const jobs = [];
+                querySnapshot.forEach((doc) => {
+                    jobs.push({ id: doc.id, ...doc.data() }); // id burada documentId
+                });
+                setJobListings(jobs);
+            } catch (error) {
+                console.error("Error fetching job listings: ", error);
+            }
+        };
+
+
+        fetchJobListings();
+    }, []);
+
     const handleApply = () => {
+        console.log('Selected Job:', selectedJob); // Hata ayıklama
         navigate('/apply', { state: { job: selectedJob } });
     };
 
@@ -102,3 +79,5 @@ function JobApplication() {
 }
 
 export default JobApplication;
+
+
